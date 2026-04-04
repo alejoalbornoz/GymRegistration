@@ -1,10 +1,7 @@
 package com.gymregistration.GymRegistration.dto;
 
 import com.gymregistration.GymRegistration.model.Membership;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -13,6 +10,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserDTO {
     private String firstName;
     private String lastName;

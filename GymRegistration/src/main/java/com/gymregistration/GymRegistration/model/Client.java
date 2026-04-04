@@ -39,6 +39,8 @@ public class Client {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @OneToOne(mappedBy = "client")
+    private User user;
 
 
 }

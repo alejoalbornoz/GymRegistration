@@ -1,6 +1,7 @@
 package com.gymregistration.GymRegistration.service;
 
 import com.gymregistration.GymRegistration.dto.ClientDTO;
+import com.gymregistration.GymRegistration.mapper.Mapper;
 import com.gymregistration.GymRegistration.model.Client;
 import com.gymregistration.GymRegistration.repository.IClientRepository;
 import com.gymregistration.GymRegistration.repository.IMembershipRepository;
