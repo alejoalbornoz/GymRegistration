@@ -1,14 +1,16 @@
 package com.gymregistration.GymRegistration.service;
 
+import com.gymregistration.GymRegistration.dto.UpdateUserDTO;
 import com.gymregistration.GymRegistration.dto.UserDTO;
 
 public interface IUserService {
 
-    public UserDTO getUserByDni(String dni);
 
-    public UserDTO getUserByEmail(String email);
+    public UserDTO getMyInfo(String email);
 
-    public UserDTO updateUser(Long id, UserDTO userDTO);
+    public UserDTO updateMyInfo(String email, UpdateUserDTO dto);
 
-    public void deleteUser(Long id);
+    public void changePassword(String email, String oldPassword, String newPassword);
+
+    public void deleteMyAccount(String email);
 }
