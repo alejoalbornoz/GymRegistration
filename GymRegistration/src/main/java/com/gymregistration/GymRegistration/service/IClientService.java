@@ -11,7 +11,7 @@ public interface IClientService {
 
     public List <ClientDTO> getClients();
 
-    public void createClient (ClientDTO dtoCli);
+    public ClientDTO createClient (ClientDTO dtoCli);
 
     public void deleteClient(Long id);
 
@@ -19,6 +19,6 @@ public interface IClientService {
 
     public ClientDTO getClientByDni (String dni);
 
-    public void editClient (ClientDTO dtoCli);
+    public ClientDTO editClient (Long id, ClientDTO dtoCli);
 
 }

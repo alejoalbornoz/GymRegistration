@@ -34,7 +34,7 @@ public class ClientService implements IClientService{
     }
 
     @Override
-    public void createClient(ClientDTO dtoCli) {
+    public ClientDTO createClient(ClientDTO dtoCli) {
 
         if (clientRepo.existsByDni(dtoCli.getDni())) {
             throw new RuntimeException("Client with DNI " + dtoCli.getDni() + " already exists");
@@ -58,28 +58,57 @@ public class ClientService implements IClientService{
         user.setRole(User.Role.CLIENT);
         user.setClient(client);
         userRepo.save(user);
+
+        return Mapper.toDTO(client);
     }
 
     @Override
     public void deleteClient(Long id) {
-        if (!clientRepo.existsById(id)){
-            throw new NotFoundException("Client no encontrado para eliminar");
+        Client cli = clientRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Client not found for delete"));
+
+        if (cli.getUser() != null) {
+            userRepo.delete(cli.getUser());
         }
+
         clientRepo.deleteById(id);
     }
 
     @Override
+    public ClientDTO editClient(Long id, ClientDTO dtoCli) {
+        Client cli = clientRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+
+        cli.setFirstName(dtoCli.getFirstName());
+        cli.setLastName(dtoCli.getLastName());
+        cli.setDni(dtoCli.getDni());
+        cli.setEmail(dtoCli.getEmail());
+        cli.setBirthDate(dtoCli.getBirthDate());
+        clientRepo.save(cli);
+
+
+        User user = cli.getUser();
+        if (user != null) {
+            user.setEmail(dtoCli.getEmail());
+            userRepo.save(user);
+        }
+
+        return Mapper.toDTO(cli);
+    }
+
+    @Override
     public ClientDTO getClientById(Long id) {
-        return null;
+        Client cli = clientRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+        return Mapper.toDTO(cli);
     }
 
     @Override
     public ClientDTO getClientByDni(String dni) {
-        return null;
+        Client cli = (Client) clientRepo.findByDni(dni)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+        return Mapper.toDTO(cli);
     }
 
-    @Override
-    public void editClient(ClientDTO dtoCli) {
 
-    }
 }
