@@ -41,4 +41,11 @@ public class AuthService {
                 .role(user.getRole().name())
                 .build();
     }
+
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+
+    public void logout(String token) {
+        tokenBlacklistService.blacklistToken(token);
+    }
 }
