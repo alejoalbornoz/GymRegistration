@@ -27,7 +27,7 @@ public class AuthService {
         User user = userRepo.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        // 2. Verificar que el password sea correcto
+
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new RuntimeException("Incorrect password");
         }
