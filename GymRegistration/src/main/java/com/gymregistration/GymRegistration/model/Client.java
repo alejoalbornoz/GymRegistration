@@ -32,12 +32,12 @@ public class Client {
 
     private LocalDate birthDate;
 
-    @OneToMany(mappedBy = "client")
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER)
     private List<Membership> memberships = new ArrayList<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToOne(mappedBy = "client")
+    @OneToOne(mappedBy = "client",  fetch = FetchType.EAGER)
     private User user;
 
 
