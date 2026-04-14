@@ -29,9 +29,18 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Rutas públicas
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        // Solo ADMIN
                         .requestMatchers("/api/clients/**").hasRole("ADMIN")
                         .requestMatchers("/api/memberships/**").hasRole("ADMIN")
+                        // Solo CLIENT
                         .requestMatchers("/api/user/**").hasRole("CLIENT")
                         .anyRequest().authenticated()
                 )
