@@ -5,9 +5,10 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: gymregistration
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_ROOT_PASSWORD:
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -29,7 +30,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/gymregistration?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: ""
       JWT_SECRET: clave_secreta_muy_larga_para_que_funcione_bien_gymapp
       JWT_EXPIRATION: 86400000
     depends_on:
