@@ -7,11 +7,13 @@ A REST API for managing gym client registrations, memberships, and user accounts
 ## 🛠️ Tech Stack
 
 - **Java 17**
-- **Spring Boot 3.2.x**
+- **Spring Boot 3.2.5**
 - **Spring Security + JWT**
-- **Spring Data JPA**
-- **MySQL**
+- **Spring Data JPA + Hibernate**
+- **MySQL 8.0**
 - **Lombok**
+- **Swagger / OpenAPI**
+- **Docker + Docker Compose**
 - **Maven**
 
 ---
@@ -21,39 +23,91 @@ A REST API for managing gym client registrations, memberships, and user accounts
 ### application.properties
 
 ```properties
-# Server
-server.port=8080
+# App
+spring.application.name=GymRegistration
 
 # Database
 spring.datasource.url=jdbc:mysql://localhost:3306/gymregistration?useSSL=false&serverTimezone=UTC
 spring.datasource.username=root
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.password=
 
 # JPA
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 spring.jpa.open-in-view=false
 
 # JWT
 jwt.secret=your_secret_key
 jwt.expiration=86400000
 
-# Scheduler
-spring.task.scheduling.pool.size=5
+# Swagger
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.swagger-ui.operationsSorter=method
 ```
+
+---
+
+## 🚀 Running the Project
+
+### Option 1 - Local
+
+#### Prerequisites
+- Java 17
+- Maven
+- MySQL running locally
+
+#### Steps
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/alejoalbornoz/GymRegistration.git
+
+# 2. Create the database in MySQL
+CREATE DATABASE gymregistration;
+
+# 3. Configure application.properties with your MySQL credentials
+
+# 4. Run the application
+cd GymRegistration
+./mvnw spring-boot:run
+```
+
+---
+
+### Option 2 - Docker
+
+#### Prerequisites
+- Docker Desktop
+
+#### Steps
+
+```bash
+# 1. Compile the project
+cd GymRegistration
+mvn clean package -DskipTests
+
+# 2. Go back to root and start containers
+cd ..
+docker-compose up --build
+```
+
+#### Stop containers
+
+```bash
+docker-compose down
+
+# Stop and remove volumes (deletes the database)
+docker-compose down -v
+```
+
+The API will be available at `http://localhost:8080`
 
 ---
 
 ## 🗄️ Database Setup
 
-Create the database in MySQL:
-
-```sql
-CREATE DATABASE gymregistration;
-```
-
-Create the admin user directly in the database. The password must be encrypted with BCrypt (use [bcrypt-generator.com](https://bcrypt-generator.com) with 10 rounds):
+After running the app, insert the admin user directly in the database. The password must be encrypted with BCrypt (use [bcrypt-generator.com](https://bcrypt-generator.com) with 10 rounds):
 
 ```sql
 INSERT INTO user (email, password, role, client_id)
@@ -65,11 +119,17 @@ VALUES (
 );
 ```
 
+For Docker, connect to the MySQL container:
+
+```bash
+docker exec -it gym_mysql mysql -u root gymregistration
+```
+
 ---
 
 ## 🔐 Authentication
 
-The API uses **JWT (JSON Web Tokens)** for authentication.
+The API uses **JWT (JSON Web Tokens)** for authentication. Tokens expire after **24 hours**.
 
 ### Roles
 
@@ -146,7 +206,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 }
 ```
 
-> **Note:** When a client is registered, a `User` account is automatically created with the client's DNI as the default password.
+> **Note:** When a client is registered, a `User` account is automatically created with the client's **DNI as the default password**.
 
 ### Memberships (Admin only)
 
@@ -170,7 +230,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 
 | Status | Description |
 |--------|-------------|
-| `ACTIVE` | Currently active (1 month from creation) |
+| `ACTIVE` | Currently active (1 month duration) |
 | `EXPIRED` | Automatically expired after 1 month |
 
 ### User (Client only)
@@ -195,43 +255,17 @@ public void checkExpiredMemberships()
 
 ---
 
-## 🚀 Running the Project
+## 📖 API Documentation
 
-### Prerequisites
+Swagger UI is available at:
 
-- Java 17
-- Maven
-- MySQL
-
-### Steps
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/gym-registration-api.git
-
-# 2. Configure application.properties with your MySQL credentials
-
-# 3. Create the database
-mysql -u root -p -e "CREATE DATABASE gym_db;"
-
-# 4. Run the application
-./mvnw spring-boot:run
+```
+http://localhost:8080/swagger-ui/index.html
 ```
 
-The API will be available at `http://localhost:8080`
-
 ---
 
-## 🐳 Docker (Coming Soon)
-
-Docker Compose support is currently being added. It will include:
-
-- MySQL container
-- Spring Boot app container
-
----
-
-## 📬 Postman
+## 📬 Postman Setup
 
 To test the API with Postman efficiently:
 
@@ -243,7 +277,72 @@ const response = pm.response.json();
 pm.environment.set("token", response.token);
 ```
 
-3. Use `Bearer {{token}}` in the Authorization header of all protected requests
+3. Use `Bearer {{token}}` in the Authorization header of all protected requests — the token updates automatically after every login.
+
+---
+
+## 🐳 Docker Files
+
+### Dockerfile
+
+```dockerfile
+FROM eclipse-temurin:17-jdk-alpine
+ARG JAR_FILE=target/GymRegistration-0.0.1-SNAPSHOT.jar
+COPY ${JAR_FILE} gym_app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "gym_app.jar"]
+```
+
+### docker-compose.yml
+
+```yaml
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gym_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: gymregistration
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - gym_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./GymRegistration
+      dockerfile: Dockerfile
+    container_name: gym_app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/gymregistration?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+      JWT_SECRET: clave_secreta_muy_larga_para_que_funcione_bien_gymapp
+      JWT_EXPIRATION: 86400000
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym_network
+
+volumes:
+  mysql_data:
+
+networks:
+  gym_network:
+    driver: bridge
+```
 
 ---
 
